@@ -157,7 +157,7 @@ git push -u origin master
 3. **Initialize and activate a virtualenv using:**
 ```
 python -m virtualenv env
-source env/bin/activate
+env/Scripts/activate
 ```
 >**Note** - In Windows, the `env` does not have a `bin` directory. Therefore, you'd use the analogous command shown below:
 ```
@@ -171,9 +171,9 @@ pip install -r requirements.txt
 
 5. **Run the development server:**
 ```
-export FLASK_APP=myapp
-export FLASK_ENV=development # enables debug mode
-python3 app.py
+set FLASK_APP=myapp
+set FLASK_ENV=development # enables debug mode
+python app.py
 ```
 
 6. **Verify on the Browser**<br>
