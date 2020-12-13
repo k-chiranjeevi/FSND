@@ -12,6 +12,7 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+from flask_migrate import Migrate
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -21,6 +22,8 @@ moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 
+migrate = Migrate(app, db)
+
 # TODO: connect to a local postgresql database
 
 #----------------------------------------------------------------------------#
@@ -28,7 +31,7 @@ db = SQLAlchemy(app)
 #----------------------------------------------------------------------------#
 
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venues'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -67,7 +70,7 @@ def format_datetime(value, format='medium'):
       format="EEEE MMMM, d, y 'at' h:mma"
   elif format == 'medium':
       format="EE MM, dd, y h:mma"
-  return babel.dates.format_datetime(date, format)
+  return babel.dates.format_datetime(date, format, locale='en')
 
 app.jinja_env.filters['datetime'] = format_datetime
 
@@ -129,12 +132,13 @@ def search_venues():
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
+  venue = Venue.query.filter_by(id=venue_id).first()
   data1={
     "id": 1,
-    "name": "The Musical Hop",
+    "name": venue.name,
     "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
     "address": "1015 Folsom Street",
-    "city": "San Francisco",
+    "city": venue.city,
     "state": "CA",
     "phone": "123-123-1234",
     "website": "https://www.themusicalhop.com",
@@ -154,10 +158,10 @@ def show_venue(venue_id):
   }
   data2={
     "id": 2,
-    "name": "The Dueling Pianos Bar",
+    "name": venue.name,
     "genres": ["Classical", "R&B", "Hip-Hop"],
     "address": "335 Delancey Street",
-    "city": "New York",
+    "city": venue.city,
     "state": "NY",
     "phone": "914-003-1132",
     "website": "https://www.theduelingpianos.com",
@@ -219,6 +223,14 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
+  req = request.form
+  print(req)
+  name = req["name"]
+  city = req["city"]
+  venue = Venue(name = name, city = city) 
+  print(name)
+  db.session.add(venue)
+  db.session.commit()
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
