@@ -45,7 +45,7 @@ class Venue(db.Model):
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -137,10 +137,10 @@ def show_venue(venue_id):
     "id": 1,
     "name": venue.name,
     "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-    "address": "1015 Folsom Street",
+    "address": venue.address,
     "city": venue.city,
-    "state": "CA",
-    "phone": "123-123-1234",
+    "state": venue.city,
+    "phone": venue.phone,
     "website": "https://www.themusicalhop.com",
     "facebook_link": "https://www.facebook.com/TheMusicalHop",
     "seeking_talent": True,
@@ -160,10 +160,10 @@ def show_venue(venue_id):
     "id": 2,
     "name": venue.name,
     "genres": ["Classical", "R&B", "Hip-Hop"],
-    "address": "335 Delancey Street",
+    "address":venue.address,
     "city": venue.city,
-    "state": "NY",
-    "phone": "914-003-1132",
+    "state": venue.state,
+    "phone": venue.phone,
     "website": "https://www.theduelingpianos.com",
     "facebook_link": "https://www.facebook.com/theduelingpianos",
     "seeking_talent": False,
@@ -175,12 +175,12 @@ def show_venue(venue_id):
   }
   data3={
     "id": 3,
-    "name": "Park Square Live Music & Coffee",
+    "name": venue.name,
     "genres": ["Rock n Roll", "Jazz", "Classical", "Folk"],
-    "address": "34 Whiskey Moore Ave",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "415-000-1234",
+    "address":venue.address,
+    "city": venue.city,
+    "state": venue.state,
+    "phone": venue.phone,
     "website": "https://www.parksquarelivemusicandcoffee.com",
     "facebook_link": "https://www.facebook.com/ParkSquareLiveMusicAndCoffee",
     "seeking_talent": False,
@@ -227,7 +227,11 @@ def create_venue_submission():
   print(req)
   name = req["name"]
   city = req["city"]
-  venue = Venue(name = name, city = city) 
+  state = req["state"]
+  address = req["address"]
+  phone = req["phone"]
+
+  venue = Venue(name = name, city = city, address = address, phone = phone, state = state ) 
   print(name)
   db.session.add(venue)
   db.session.commit()
@@ -424,6 +428,13 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
+  req = request.form
+  print(req)
+  name = req["name"]
+  artist = Artist(name = name)
+  print(name)
+  db.session.add(artist)
+  db.session.commit()
   # called upon submitting the new artist listing form
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
