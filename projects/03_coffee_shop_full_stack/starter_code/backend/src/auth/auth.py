@@ -1,4 +1,4 @@
-from os import environ
+
 import json
 from flask import request, _request_ctx_stack, abort
 from functools import wraps
@@ -6,10 +6,10 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-AUTH0_DOMAIN = environ.get('AUTH0_DOMAIN', 'coffee-api-server.us.auth0.com')
+AUTH0_DOMAIN = 'coffee-api-server.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = environ.get('API_AUDIENCE','coffee')
-CLIENT_ID = 'Wx3eZOZCwhC7sTi83XW7DmPiM3HmBj6e'
+API_AUDIENCE = 'http://localhost:5000/'
+
 
 
 

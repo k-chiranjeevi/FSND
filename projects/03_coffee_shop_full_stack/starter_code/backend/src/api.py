@@ -30,12 +30,12 @@ CORS(app)
 
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
-  drinks = Drink.query.order_by(Drink.id).all()
-
+  drinks = Drink.query.all()
   return jsonify({
     'success': True,
     'drinks': [drink.short() for drink in drinks]
   }), 200
+
 
 
 
@@ -48,15 +48,17 @@ def get_drinks():
         or appropriate status code indicating reason for failure
 '''
 
+
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
-def get_drink_detail(jwt):
-  drinks = [drink.long() fro drink in Drink.query.all()]
+def get_drink_detail(payload):
+  drinks = Drink.query.all()
 
   return jsonify({
     'success': True,
-    'drinks': drinks
-  }), 200
+    'drinks': [drink.long() for drink in drinks]
+  })
+
 
 '''
 @TODO implement endpoint
@@ -67,23 +69,28 @@ def get_drink_detail(jwt):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
-def post_drink(jwt):
-  data = request.get_json()
-  if 'title' and 'recipe' not in data:
-    abort(422)
+def create_drink(payload):
+  req = request.get_json()
 
-  title = data['title']
-  recipe_json = json.dumps(data['recipe'])
-  drink = Drink(title=title, recipe=recipe_json)
+  try:
+    req_recipe = req['recipe']
+    if isinstance(req_recipe, dict):
+      req_recipe = [req_recipe]
 
-  drink.insert()
+    drink = Drink()
+    drink.title = req['title']
+    drink.recipe = json.dumps(req_recipe)  # convert object to a string
+    drink.insert()
 
-  return jsonify({
-    'success': True,
-    'drinks': [drink.long()]
-  })
+  except BaseException:
+    abort(404)
+
+  return jsonify({'success': True, 'drinks': [drink.long()]}), 200
+
+
 
 '''
 @TODO implement endpoint
@@ -116,9 +123,10 @@ def update_drink(payload, id):
 
     drink.update()
   except BaseException:
-    abort(400)
+    abort(404)
 
   return jsonify({'success': True, 'drinks': [drink.long()]}), 200
+
 
 '''
 @TODO implement endpoint
@@ -154,10 +162,10 @@ Example error handling for unprocessable entity
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-                    "success": False, 
-                    "error": 422,
-                    "message": "unprocessable"
-                    }), 422
+      "success": False, 
+      "error": 422,
+      "message": "unprocessable"
+    }), 422
 
 '''
 @TODO implement error handlers using the @app.errorhandler(error) decorator
@@ -186,13 +194,7 @@ def not_found(error):
 @TODO implement error handler for AuthError
     error handler should conform to general task above 
 '''
-@app.errorhandler(AuthError)
-def auth_error(error):
-  return jsonify({
-    "success": False,
-    "error": error.status_code,
-    "message": error.error['description']
-  }), error.status_code
+
 
 
 @app.errorhandler(401)
@@ -200,7 +202,7 @@ def unauthorized(error):
   return jsonify({
     "success": False,
     "error": 401,
-    "message": 'Unathorized'
+    "message": 'Unauthorized'
   }), 401
 
 
@@ -213,19 +215,21 @@ def internal_server_error(error):
   }), 500
 
 
+
+
 @app.errorhandler(400)
-def bad_request(error):
+def unprocessable(error):
   return jsonify({
     "success": False,
     "error": 400,
-    "message": 'Bad Request'
+    "message": "Check the body request"
   }), 400
 
-
-@app.errorhandler(405)
-def method_not_allowed(error):
-  return jsonify({
-    "success": False,
-    "error": 405,
-    "message": 'Method Not Allowed'
-  }), 405
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+  """
+  Receive the raised authorization error and propagates it as response
+  """
+  response = jsonify(ex.error)
+  response.status_code = ex.status_code
+  return response
